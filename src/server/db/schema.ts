@@ -51,6 +51,15 @@ CREATE INDEX IF NOT EXISTS idx_grievances_student ON grievances(student_id);
 CREATE INDEX IF NOT EXISTS idx_comments_grievance ON comments(grievance_id);
 CREATE INDEX IF NOT EXISTS idx_attachments_grievance ON attachments(grievance_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+
+CREATE TABLE IF NOT EXISTS status_changes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  grievance_id TEXT NOT NULL REFERENCES grievances(id) ON DELETE CASCADE,
+  changed_by TEXT NOT NULL REFERENCES users(id),
+  from_status TEXT NOT NULL,
+  to_status TEXT NOT NULL,
+  changed_at TEXT NOT NULL
+);
 `;
 
 export function applySchema(db: Database): void {

@@ -285,6 +285,9 @@ grievanceRoutes.patch('/:id', async (c) => {
 				ts,
 				row.id
 			);
+			db.prepare(
+				'INSERT INTO status_changes (grievance_id, changed_by, from_status, to_status, changed_at) VALUES (?, ?, ?, ?, ?)'
+			).run(row.id, user.id, row.status, nextStatus, ts);
 			break;
 		}
 		default: {

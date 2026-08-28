@@ -1,0 +1,50 @@
+{
+	"name": "hostelgrievance",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"dev:api": "tsx watch src/server/index.ts",
+		"dev:all": "concurrently -k -n ui,api -c cyan,magenta \"npm run dev\" \"npm run dev:api\"",
+		"db:init": "tsx src/server/scripts/reset-db.ts",
+		"db:reset": "tsx src/server/scripts/reset-db.ts",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc --noEmit -p tsconfig.server.json",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+	},
+	"devDependencies": {
+		"@internationalized/date": "^3.12.3",
+		"@lucide/svelte": "^1.34.0",
+		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/kit": "^2.63.0",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@tailwindcss/vite": "^4.3.0",
+		"@types/better-sqlite3": "^9.6.0",
+		"@types/node": "^26.4.0",
+		"bits-ui": "^2.19.0",
+		"clsx": "^2.1.1",
+		"concurrently": "^10.0.5",
+		"mode-watcher": "^1.1.0",
+		"svelte": "^5.56.1",
+		"svelte-check": "^4.6.0",
+		"svelte-sonner": "^1.2.1",
+		"tailwind-merge": "^3.6.0",
+		"tailwind-variants": "^3.3.1",
+		"tailwindcss": "^4.3.0",
+		"tsx": "^4.23.12",
+		"typescript": "^6.0.3",
+		"vite": "^8.0.16",
+		"vitest": "^4.1.11"
+	},
+	"dependencies": {
+		"@hono/node-server": "^2.1.1",
+		"better-sqlite3": "^13.0.3",
+		"hono": "^4.13.5"
+	}
+}

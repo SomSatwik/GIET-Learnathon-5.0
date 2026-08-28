@@ -1,0 +1,38 @@
+node_modules/
+
+# Logs and local tooling
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+/.vite
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Local SQLite + uploaded files (keep directory markers)
+/data/*.db
+/data/*.db-*
+/uploads/*
+!/uploads/.gitkeep
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

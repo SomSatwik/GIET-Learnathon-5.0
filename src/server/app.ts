@@ -6,6 +6,8 @@ import { authRoutes } from './routes/auth.ts';
 import { grievanceRoutes } from './routes/grievances.ts';
 import { attachmentRoutes } from './routes/attachments.ts';
 import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
+import { bodyLimit } from 'hono/body-limit';
 
 export type CreateAppOptions = {
 	db: Database;
@@ -32,6 +34,27 @@ export function createApp(options: CreateAppOptions) {
 			credentials: true
 		})
 	);
+
+	// Security headers on all responses — MED-3
+	app.use('*', secureHeaders({
+		contentSecurityPolicy: {
+			defaultSrc: ["'self'"],
+			scriptSrc: ["'self'"],
+			styleSrc: ["'self'", "'unsafe-inline'"],
+			imgSrc: ["'self'", 'data:'],
+			connectSrc: ["'self'"],
+			fontSrc: ["'self'"],
+			objectSrc: ["'none'"],
+			frameSrc: ["'none'"]
+		},
+		xFrameOptions: 'DENY',
+		xContentTypeOptions: 'nosniff',
+		strictTransportSecurity: 'max-age=31536000; includeSubDomains',
+		referrerPolicy: 'strict-origin-when-cross-origin'
+	}));
+
+	// Global body cap before any handler buffers the request — MED-6
+	app.use('/api/*', bodyLimit({ maxSize: 3 * 1024 * 1024 }));
 
 	app.onError((err, c) => handleError(err, c));
 

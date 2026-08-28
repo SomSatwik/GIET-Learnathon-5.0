@@ -7,10 +7,22 @@ import { toPublicUser } from '../db/map.ts';
 import { HttpError } from '../http/errors.ts';
 import { getCookie } from 'hono/cookie';
 import { SESSION_COOKIE } from '../config.ts';
+import { rateLimiter } from 'hono-rate-limiter';
 
 export const authRoutes = new Hono<AppEnv>();
 
-authRoutes.post('/login', async (c) => {
+// Allow max 20 login attempts per IP per 15-minute window
+const loginRateLimit = rateLimiter({
+	windowMs: 15 * 60 * 1000,
+	limit: 20,
+	standardHeaders: 'draft-6',
+	keyGenerator: (c) =>
+		c.req.header('x-forwarded-for')?.split(',')[0].trim() ??
+		c.req.header('x-real-ip') ??
+		'unknown'
+});
+
+authRoutes.post('/login', loginRateLimit, async (c) => {
 	const db = c.get('db');
 	let body: unknown;
 	try {

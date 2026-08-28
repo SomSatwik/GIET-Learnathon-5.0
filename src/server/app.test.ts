@@ -98,7 +98,7 @@ describe('HostelGrievance API baseline', () => {
 		});
 		expect(res.status).toBe(201);
 		const json = await res.json();
-		expect(json.data.id).toMatch(/^GRV-\d{4}$/);
+		expect(json.data.id).toMatch(/^GRV-[0-9A-F]{12}$/);
 		expect(json.data.studentId).toBe('stu-1');
 		expect(json.data.status).toBe('Open');
 		expect(json.data.student.email).toBe('student@example.test');

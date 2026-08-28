@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import type { Database } from 'better-sqlite3';
 import { HttpError } from '../http/errors.ts';
 import type {
@@ -95,43 +96,16 @@ export function assertCanViewGrievance(user: SessionUser, row: GrievanceRow): vo
 	}
 }
 
-function nextPrefixedId(db: Database, table: 'grievances' | 'comments' | 'attachments', prefix: string): string {
-	const rows = db.prepare(`SELECT id FROM ${table}`).all() as { id: string }[];
-	let max = 0;
-	for (const row of rows) {
-		if (!row.id.startsWith(prefix)) continue;
-		const n = Number.parseInt(row.id.slice(prefix.length), 10);
-		if (!Number.isNaN(n) && n > max) max = n;
-	}
-	return `${prefix}${String(max + 1).padStart(prefix === 'GRV-' ? 4 : 0, '0')}`;
+export function nextGrievanceId(_db: Database): string {
+	return `GRV-${randomBytes(6).toString('hex').toUpperCase()}`;
 }
 
-export function nextGrievanceId(db: Database): string {
-	return nextPrefixedId(db, 'grievances', 'GRV-');
+export function nextCommentId(_db: Database): string {
+	return `cmt-${randomBytes(6).toString('hex')}`;
 }
 
-export function nextCommentId(db: Database): string {
-	const rows = db.prepare('SELECT id FROM comments').all() as { id: string }[];
-	let max = 0;
-	for (const row of rows) {
-		const match = /^cmt-(\d+)$/.exec(row.id);
-		if (!match) continue;
-		const n = Number.parseInt(match[1], 10);
-		if (n > max) max = n;
-	}
-	return `cmt-${max + 1}`;
-}
-
-export function nextAttachmentId(db: Database): string {
-	const rows = db.prepare('SELECT id FROM attachments').all() as { id: string }[];
-	let max = 0;
-	for (const row of rows) {
-		const match = /^att-(\d+)$/.exec(row.id);
-		if (!match) continue;
-		const n = Number.parseInt(match[1], 10);
-		if (n > max) max = n;
-	}
-	return `att-${max + 1}`;
+export function nextAttachmentId(_db: Database): string {
+	return `att-${randomBytes(6).toString('hex')}`;
 }
 
 export function touchGrievance(db: Database, id: string, updatedAt: string): void {

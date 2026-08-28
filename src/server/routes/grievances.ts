@@ -3,6 +3,7 @@ import type { AppEnv } from '../env.ts';
 import { requireUser } from '../auth/session.ts';
 import {
 	assembleGrievance,
+	assertCanViewGrievance,
 	findUserById,
 	listAllGrievanceRows,
 	listCommentRows,
@@ -120,8 +121,9 @@ grievanceRoutes.post('/', async (c) => {
 
 grievanceRoutes.get('/:id/comments', (c) => {
 	const db = c.get('db');
-	requireUser(c, db);
+	const user = requireUser(c, db);
 	const row = requireGrievance(db, c.req.param('id'));
+	assertCanViewGrievance(user, row);
 	const comments = listCommentRows(db, row.id).map((comment) => {
 		const authorRow = findUserById(db, comment.author_id);
 		if (!authorRow) {
@@ -199,8 +201,9 @@ grievanceRoutes.post('/:id/attachments', async (c) => {
 
 grievanceRoutes.get('/:id', (c) => {
 	const db = c.get('db');
-	requireUser(c, db);
+	const user = requireUser(c, db);
 	const row = requireGrievance(db, c.req.param('id'));
+	assertCanViewGrievance(user, row);
 	return c.json({ data: assembleGrievance(db, row) });
 });
 
@@ -232,13 +235,18 @@ grievanceRoutes.patch('/:id', async (c) => {
 
 	switch (user.role) {
 		case 'student': {
+			if (row.student_id !== user.id) {
+				throw new HttpError(403, 'unauthorized', 'You cannot access this grievance.');
+			}
 			if (row.status === 'resolved') {
 				throw new HttpError(409, 'conflict', 'Resolved grievances cannot be edited.');
+			}
+			if (wantsStatus) {
+				throw new HttpError(403, 'unauthorized', 'Students cannot change grievance status.');
 			}
 			let nextTitle = row.title;
 			let nextDescription = row.description;
 			let nextCategory = row.category;
-			let nextStatus: GrievanceStatusDb = row.status;
 			if (title !== undefined) {
 				if (typeof title !== 'string' || title.trim().length < 5) {
 					throw new HttpError(400, 'bad_request', 'Title must be at least 5 characters.');
@@ -257,16 +265,10 @@ grievanceRoutes.patch('/:id', async (c) => {
 				}
 				nextCategory = parseCategory(category);
 			}
-			if (status !== undefined) {
-				if (typeof status !== 'string') {
-					throw new HttpError(400, 'bad_request', 'Invalid grievance status.');
-				}
-				nextStatus = statusToDb(status);
-			}
 			const ts = nowIso();
 			db.prepare(
-				'UPDATE grievances SET title = ?, description = ?, category = ?, status = ?, updated_at = ? WHERE id = ?'
-			).run(nextTitle, nextDescription, nextCategory, nextStatus, ts, row.id);
+				'UPDATE grievances SET title = ?, description = ?, category = ?, updated_at = ? WHERE id = ?'
+			).run(nextTitle, nextDescription, nextCategory, ts, row.id);
 			break;
 		}
 		case 'warden': {

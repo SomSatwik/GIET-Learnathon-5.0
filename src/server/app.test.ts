@@ -34,16 +34,18 @@ async function login(app: ReturnType<typeof createApp>, email: string, password:
 describe('HostelGrievance API baseline', () => {
 	let dir: string;
 	let app: ReturnType<typeof createApp>;
+	let db: ReturnType<typeof openDatabase>;
 
 	beforeEach(() => {
 		dir = mkdtempSync(join(tmpdir(), 'hg-api-'));
-		const db = openDatabase(join(dir, 'hostel.db'));
+		db = openDatabase(join(dir, 'hostel.db'));
 		const uploadDir = join(dir, 'uploads');
 		seedDatabase(db, uploadDir);
 		app = createApp({ db, uploadsDir: uploadDir });
 	});
 
 	afterEach(() => {
+		db.close();
 		rmSync(dir, { recursive: true, force: true });
 	});
 

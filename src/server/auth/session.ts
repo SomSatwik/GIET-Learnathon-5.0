@@ -36,6 +36,10 @@ export function readSessionUser(db: Database, token: string): SessionUser | unde
 		)
 		.get(token) as (SessionUser & { expires_at: string }) | undefined;
 	if (!row) return undefined;
+	if (row.expires_at < nowIso()) {
+		destroySession(db, token);
+		return undefined;
+	}
 	return {
 		id: row.id,
 		name: row.name,
@@ -49,7 +53,10 @@ export function readSessionUser(db: Database, token: string): SessionUser | unde
 export function setSessionCookie(c: Context, token: string): void {
 	setCookie(c, SESSION_COOKIE, token, {
 		path: '/',
-		maxAge: SESSION_TTL_SECONDS
+		maxAge: SESSION_TTL_SECONDS,
+		httpOnly: true,
+		secure: process.env.NODE_ENV === 'production',
+		sameSite: 'Lax'
 	});
 }
 

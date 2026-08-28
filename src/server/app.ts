@@ -10,17 +10,28 @@ import { cors } from 'hono/cors';
 export type CreateAppOptions = {
 	db: Database;
 	uploadsDir: string;
+	allowedOrigins?: string[];
 };
+
+const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4173'];
 
 export function createApp(options: CreateAppOptions) {
 	const app = new Hono<AppEnv>();
+
+	const allowedOrigins = new Set(options.allowedOrigins ?? DEFAULT_ALLOWED_ORIGINS);
 
 	app.use('*', async (c, next) => {
 		c.set('db', options.db);
 		c.set('uploadsDir', options.uploadsDir);
 		await next();
 	});
-	app.use('/api/*', cors({ origin: (origin) => origin ?? '*', credentials: true }));
+	app.use(
+		'/api/*',
+		cors({
+			origin: (origin) => (origin && allowedOrigins.has(origin) ? origin : null),
+			credentials: true
+		})
+	);
 
 	app.onError((err, c) => handleError(err, c));
 

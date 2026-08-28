@@ -27,14 +27,14 @@ export function findGrievanceRow(db: Database, id: string): GrievanceRow | undef
 	return db.prepare('SELECT * FROM grievances WHERE id = ?').get(id) as GrievanceRow | undefined;
 }
 
-export function listGrievanceRowsForStudent(db: Database, studentId: string): GrievanceRow[] {
+export function listGrievanceRowsForStudent(db: Database, studentId: string, limit = 50, offset = 0): GrievanceRow[] {
 	return db
-		.prepare('SELECT * FROM grievances WHERE student_id = ? ORDER BY created_at DESC')
-		.all(studentId) as GrievanceRow[];
+		.prepare('SELECT * FROM grievances WHERE student_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?')
+		.all(studentId, limit, offset) as GrievanceRow[];
 }
 
-export function listAllGrievanceRows(db: Database): GrievanceRow[] {
-	return db.prepare('SELECT * FROM grievances ORDER BY created_at DESC').all() as GrievanceRow[];
+export function listAllGrievanceRows(db: Database, limit = 50, offset = 0): GrievanceRow[] {
+	return db.prepare('SELECT * FROM grievances ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset) as GrievanceRow[];
 }
 
 export function listCommentRows(db: Database, grievanceId: string): CommentRow[] {

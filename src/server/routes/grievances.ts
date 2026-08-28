@@ -38,10 +38,18 @@ export const grievanceRoutes = new Hono<AppEnv>();
 grievanceRoutes.get('/', (c) => {
 	const db = c.get('db');
 	const user = requireUser(c, db);
+
+	const limit = Math.min(Math.max(parseInt(c.req.query('limit') ?? '50', 10) || 50, 1), 100);
+	const offset = Math.max(parseInt(c.req.query('offset') ?? '0', 10) || 0, 0);
+
 	const rows =
-		user.role === 'warden' ? listAllGrievanceRows(db) : listGrievanceRowsForStudent(db, user.id);
+		user.role === 'warden'
+			? listAllGrievanceRows(db, limit, offset)
+			: listGrievanceRowsForStudent(db, user.id, limit, offset);
 	return c.json({
-		data: rows.map((row) => assembleGrievance(db, row))
+		data: rows.map((row) => assembleGrievance(db, row)),
+		limit,
+		offset
 	});
 });
 

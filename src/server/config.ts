@@ -25,3 +25,6 @@ export const ALLOWED_ATTACHMENT_TYPES = new Set([
 	'image/gif',
 	'image/webp'
 ]);
+
+/** Minimum password length enforced at every password-acceptance point. */
+export const MIN_PASSWORD_LENGTH = 8;

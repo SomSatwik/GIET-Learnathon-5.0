@@ -6,7 +6,7 @@ import { findUserByEmail } from '../db/queries.ts';
 import { toPublicUser } from '../db/map.ts';
 import { HttpError } from '../http/errors.ts';
 import { getCookie } from 'hono/cookie';
-import { SESSION_COOKIE } from '../config.ts';
+import { SESSION_COOKIE, MIN_PASSWORD_LENGTH } from '../config.ts';
 import { rateLimiter } from 'hono-rate-limiter';
 
 export const authRoutes = new Hono<AppEnv>();
@@ -37,6 +37,9 @@ authRoutes.post('/login', loginRateLimit, async (c) => {
 	const password = 'password' in body && typeof body.password === 'string' ? body.password : '';
 	if (!email || !password) {
 		throw new HttpError(400, 'bad_request', 'Email and password are required.');
+	}
+	if (password.length < MIN_PASSWORD_LENGTH) {
+		throw new HttpError(401, 'unauthenticated', 'Invalid email or password.');
 	}
 	const user = findUserByEmail(db, email);
 	if (!user || !(await verifyPassword(password, user.password_hash))) {

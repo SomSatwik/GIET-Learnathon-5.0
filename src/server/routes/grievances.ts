@@ -94,8 +94,14 @@ grievanceRoutes.post('/', async (c) => {
 	if (title.length < 5) {
 		throw new HttpError(400, 'bad_request', 'Title must be at least 5 characters.');
 	}
+	if (title.length > 200) {
+		throw new HttpError(400, 'bad_request', 'Title must be 200 characters or fewer.');
+	}
 	if (description.length < 20) {
 		throw new HttpError(400, 'bad_request', 'Description must be at least 20 characters.');
+	}
+	if (description.length > 5000) {
+		throw new HttpError(400, 'bad_request', 'Description must be 5000 characters or fewer.');
 	}
 	const parsedCategory = parseCategory(category);
 
@@ -146,6 +152,7 @@ grievanceRoutes.post('/:id/comments', async (c) => {
 	const db = c.get('db');
 	const user = requireUser(c, db);
 	const row = requireGrievance(db, c.req.param('id'));
+	assertCanViewGrievance(user, row);
 
 	let body: unknown;
 	try {
@@ -159,6 +166,9 @@ grievanceRoutes.post('/:id/comments', async (c) => {
 			: '';
 	if (!text) {
 		throw new HttpError(400, 'bad_request', 'Comment cannot be empty.');
+	}
+	if (text.length > 2000) {
+		throw new HttpError(400, 'bad_request', 'Comment must be 2000 characters or fewer.');
 	}
 
 	const id = nextCommentId(db);
@@ -259,11 +269,17 @@ grievanceRoutes.patch('/:id', async (c) => {
 				if (typeof title !== 'string' || title.trim().length < 5) {
 					throw new HttpError(400, 'bad_request', 'Title must be at least 5 characters.');
 				}
+				if (title.trim().length > 200) {
+					throw new HttpError(400, 'bad_request', 'Title must be 200 characters or fewer.');
+				}
 				nextTitle = title.trim();
 			}
 			if (description !== undefined) {
 				if (typeof description !== 'string' || description.trim().length < 20) {
 					throw new HttpError(400, 'bad_request', 'Description must be at least 20 characters.');
+				}
+				if (description.trim().length > 5000) {
+					throw new HttpError(400, 'bad_request', 'Description must be 5000 characters or fewer.');
 				}
 				nextDescription = description.trim();
 			}

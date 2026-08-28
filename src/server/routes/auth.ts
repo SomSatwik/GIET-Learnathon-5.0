@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../env.ts';
 import { createSession, clearSessionCookie, destroySession, requireUser, setSessionCookie } from '../auth/session.ts';
-import { verifyPassword } from '../auth/passwords.ts';
+import { verifyPassword, hashPassword } from '../auth/passwords.ts';
 import { findUserByEmail } from '../db/queries.ts';
 import { toPublicUser } from '../db/map.ts';
 import { HttpError } from '../http/errors.ts';
@@ -44,6 +44,11 @@ authRoutes.post('/login', loginRateLimit, async (c) => {
 	const user = findUserByEmail(db, email);
 	if (!user || !(await verifyPassword(password, user.password_hash))) {
 		throw new HttpError(401, 'unauthenticated', 'Invalid email or password.');
+	}
+	// Silently upgrade any legacy sha256: hash to Argon2id on first successful login
+	if (user.password_hash.startsWith('sha256:')) {
+		const upgraded = await hashPassword(password);
+		db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(upgraded, user.id);
 	}
 	const token = createSession(db, user.id);
 	setSessionCookie(c, token);

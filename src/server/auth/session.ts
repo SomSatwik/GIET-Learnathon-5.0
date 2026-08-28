@@ -15,6 +15,10 @@ function expiryIso(): string {
 }
 
 export function createSession(db: Database, userId: string): string {
+	// Purge expired sessions for this user to keep the table lean
+	db.prepare('DELETE FROM sessions WHERE user_id = ? AND expires_at < ?').run(userId, nowIso());
+	// Invalidate all existing active sessions to prevent session fixation
+	db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
 	const token = randomBytes(32).toString('base64url');
 	db.prepare(
 		'INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)'

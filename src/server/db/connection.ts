@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname } from 'node:path';
 import Database from 'better-sqlite3';
 import { applySchema } from './schema.ts';
@@ -11,5 +11,8 @@ export function openDatabase(path: string): Database.Database {
 	db.pragma('journal_mode = WAL');
 	db.pragma('foreign_keys = ON');
 	applySchema(db);
+	if (path !== ':memory:') {
+		chmodSync(path, 0o600);
+	}
 	return db;
 }

@@ -8,6 +8,7 @@ import { attachmentRoutes } from './routes/attachments.ts';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { bodyLimit } from 'hono/body-limit';
+import { rateLimiter } from 'hono-rate-limiter';
 
 export type CreateAppOptions = {
 	db: Database;
@@ -50,11 +51,31 @@ export function createApp(options: CreateAppOptions) {
 		xFrameOptions: 'DENY',
 		xContentTypeOptions: 'nosniff',
 		strictTransportSecurity: 'max-age=31536000; includeSubDomains',
-		referrerPolicy: 'strict-origin-when-cross-origin'
+		referrerPolicy: 'strict-origin-when-cross-origin',
+		permissionsPolicy: { camera: [], microphone: [], geolocation: [], usb: [] }
 	}));
+
+	// Prevent caching of authenticated API responses — LOW-B
+	app.use('/api/*', async (c, next) => {
+		await next();
+		c.header('Cache-Control', 'no-store, no-cache, must-revalidate');
+		c.header('Pragma', 'no-cache');
+	});
 
 	// Global body cap before any handler buffers the request — MED-6
 	app.use('/api/*', bodyLimit({ maxSize: 3 * 1024 * 1024 }));
+
+	// Global API rate limit (200 req/min per IP) covers all endpoints — HIGH-D
+	const globalApiLimit = rateLimiter({
+		windowMs: 60 * 1000,
+		limit: 200,
+		standardHeaders: 'draft-6',
+		keyGenerator: (c) =>
+			c.req.header('x-forwarded-for')?.split(',')[0].trim() ??
+			c.req.header('x-real-ip') ??
+			'unknown'
+	});
+	app.use('/api/*', globalApiLimit);
 
 	app.onError((err, c) => handleError(err, c));
 

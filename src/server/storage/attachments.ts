@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { fileTypeFromBuffer } from 'file-type';
 import { ALLOWED_ATTACHMENT_TYPES, MAX_ATTACHMENT_BYTES } from '../config.ts';
 import { HttpError } from '../http/errors.ts';
 
@@ -32,8 +33,9 @@ export function extensionForMime(mime: string): string {
 	return MIME_EXTENSION[mime] ?? '.bin';
 }
 
-export function newStoredName(mime: string, originalName?: string): string {
-	return originalName ?? `${randomBytes(16).toString('hex')}${extensionForMime(mime)}`;
+/** Always generates a random hex name — the original filename is stored in DB only, never on disk. */
+export function newStoredName(mime: string): string {
+	return `${randomBytes(16).toString('hex')}${extensionForMime(mime)}`;
 }
 
 export function assertPermittedAttachment(mime: string, size: number): void {
@@ -50,13 +52,29 @@ export function assertPermittedAttachment(mime: string, size: number): void {
 
 export async function bufferFromUpload(file: File): Promise<Buffer> {
 	const bytes = Buffer.from(await file.arrayBuffer());
-	assertPermittedAttachment(file.type, bytes.byteLength);
+	// Validate size before the more expensive magic-byte check
+	if (bytes.byteLength <= 0) {
+		throw new HttpError(400, 'bad_request', 'Attachment file is empty.');
+	}
+	if (bytes.byteLength > MAX_ATTACHMENT_BYTES) {
+		throw new HttpError(400, 'bad_request', 'Attachment must be 2 MB or smaller.');
+	}
+	// Detect actual file type from magic bytes — ignores client-supplied Content-Type
+	const detected = await fileTypeFromBuffer(bytes);
+	if (!detected || !ALLOWED_ATTACHMENT_TYPES.has(detected.mime)) {
+		throw new HttpError(400, 'bad_request', 'Attachments must be JPEG, PNG, GIF, or WebP images.');
+	}
 	return bytes;
 }
 
 export function writeStoredFile(uploadsDir: string, storedName: string, bytes: Buffer): void {
 	ensureUploadsDir(uploadsDir);
-	writeFileSync(join(uploadsDir, storedName), bytes);
+	const root = resolve(uploadsDir);
+	const full = resolve(join(uploadsDir, storedName));
+	if (full !== root && !full.startsWith(root + sep)) {
+		throw new HttpError(400, 'bad_request', 'Invalid file path.');
+	}
+	writeFileSync(full, bytes);
 }
 
 export function readStoredFile(uploadsDir: string, storedName: string): Buffer {

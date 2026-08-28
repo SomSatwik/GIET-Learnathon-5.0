@@ -186,7 +186,7 @@ grievanceRoutes.post('/:id/attachments', async (c) => {
 	}
 
 	const bytes = await bufferFromUpload(upload);
-	const stored = newStoredName(upload.type, upload.name);
+	const stored = newStoredName(upload.type);
 	const ts = nowIso();
 	writeStoredFile(c.get('uploadsDir'), stored, bytes);
 	const id = nextAttachmentId(db);

@@ -39,7 +39,7 @@ authRoutes.post('/login', loginRateLimit, async (c) => {
 		throw new HttpError(400, 'bad_request', 'Email and password are required.');
 	}
 	const user = findUserByEmail(db, email);
-	if (!user || !verifyPassword(password, user.password_hash)) {
+	if (!user || !(await verifyPassword(password, user.password_hash))) {
 		throw new HttpError(401, 'unauthenticated', 'Invalid email or password.');
 	}
 	const token = createSession(db, user.id);

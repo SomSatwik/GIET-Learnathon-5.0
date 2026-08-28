@@ -9,17 +9,18 @@ function removeIfExists(path: string): void {
 	if (existsSync(path)) unlinkSync(path);
 }
 
-export function resetDatabase(dbPath = DEFAULT_DB_PATH, uploadsDir = DEFAULT_UPLOADS_DIR): void {
+export async function resetDatabase(dbPath = DEFAULT_DB_PATH, uploadsDir = DEFAULT_UPLOADS_DIR): Promise<void> {
 	removeIfExists(dbPath);
 	removeIfExists(`${dbPath}-wal`);
 	removeIfExists(`${dbPath}-shm`);
 	resetUploadsDir(uploadsDir);
 	const db = openDatabase(dbPath);
-	seedDatabase(db, uploadsDir);
+	await seedDatabase(db, uploadsDir);
 	db.close();
 }
 
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
-	resetDatabase();
-	console.log('Reset complete: data/hostel.db and uploads/ restored to the seeded lab state.');
+	resetDatabase().then(() => {
+		console.log('Reset complete: data/hostel.db and uploads/ restored to the seeded lab state.');
+	});
 }

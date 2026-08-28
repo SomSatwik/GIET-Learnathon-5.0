@@ -36,11 +36,11 @@ describe('HostelGrievance API baseline', () => {
 	let app: ReturnType<typeof createApp>;
 	let db: ReturnType<typeof openDatabase>;
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		dir = mkdtempSync(join(tmpdir(), 'hg-api-'));
 		db = openDatabase(join(dir, 'hostel.db'));
 		const uploadDir = join(dir, 'uploads');
-		seedDatabase(db, uploadDir);
+		await seedDatabase(db, uploadDir);
 		app = createApp({ db, uploadsDir: uploadDir });
 	});
 

@@ -16,10 +16,10 @@ const JPEG = Buffer.from(
 	'base64'
 );
 
-export function seedDatabase(db: Database, uploadsDir: string): void {
+export async function seedDatabase(db: Database, uploadsDir: string): Promise<void> {
 	ensureUploadsDir(uploadsDir);
-	const studentHash = hashPassword('student123');
-	const wardenHash = hashPassword('warden123');
+	const studentHash = await hashPassword('student123');
+	const wardenHash = await hashPassword('warden123');
 
 	const insertUser = db.prepare(
 		`INSERT INTO users (id, name, email, password_hash, role, room, created_at)

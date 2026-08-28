@@ -44,6 +44,7 @@
 	},
 	"dependencies": {
 		"@hono/node-server": "^2.1.1",
+		"@node-rs/argon2": "^2.1.0",
 		"better-sqlite3": "^13.0.3",
 		"file-type": "^22.0.2",
 		"hono": "^4.13.5",

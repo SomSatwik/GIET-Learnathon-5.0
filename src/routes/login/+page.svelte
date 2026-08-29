@@ -97,9 +97,15 @@
 		</Card>
 
 		<p class="text-muted-foreground mt-6 text-center text-xs leading-relaxed">
-			Demo environment — development credentials only:<br />
+			<!--Demo environment — development credentials only:<br />
 			Student: student@example.test / student123<br />
-			Warden: warden@example.test / warden123
+			Warden: warden@example.test / warden123-->
+		</p>
+		<p class="text-muted-foreground mt-3 text-center text-sm">
+			New student?
+			<a href="/register" class="text-foreground font-medium underline-offset-4 hover:underline">
+				Create an account
+			</a>
 		</p>
 	</div>
 </main>

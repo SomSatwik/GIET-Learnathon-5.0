@@ -83,3 +83,14 @@ export function requireUser(c: Context, db: Database): SessionUser {
 export function optionalToken(c: Context): string | undefined {
 	return getCookie(c, SESSION_COOKIE);
 }
+
+/**
+ * Centralized role-based authorization guard.
+ * Call after requireUser() to enforce that the authenticated user holds the expected role.
+ * Throws 403 if the role does not match.
+ */
+export function requireRole(user: SessionUser, role: import('../types/index.ts').Role): void {
+	if (user.role !== role) {
+		throw new HttpError(403, 'unauthorized', 'You do not have permission to perform this action.');
+	}
+}

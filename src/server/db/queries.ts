@@ -111,3 +111,25 @@ export function nextAttachmentId(_db: Database): string {
 export function touchGrievance(db: Database, id: string, updatedAt: string): void {
 	db.prepare('UPDATE grievances SET updated_at = ? WHERE id = ?').run(updatedAt, id);
 }
+
+/** Generate a unique user ID with the given role prefix. */
+export function nextUserId(db: Database, role: 'student' | 'warden'): string {
+	const prefix = role === 'warden' ? 'war' : 'stu';
+	// Retry in the astronomically unlikely event of a collision
+	for (let i = 0; i < 5; i++) {
+		const candidate = `${prefix}-${randomBytes(6).toString('hex')}`;
+		const existing = db.prepare('SELECT id FROM users WHERE id = ?').get(candidate);
+		if (!existing) return candidate;
+	}
+	throw new Error('Could not generate a unique user ID');
+}
+
+/** Insert a new user row. The caller is responsible for hashing the password beforehand. */
+export function createUser(
+	db: Database,
+	opts: { id: string; name: string; email: string; passwordHash: string; role: 'student' | 'warden'; room: string | null }
+): void {
+	db.prepare(
+		'INSERT INTO users (id, name, email, password_hash, role, room, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+	).run(opts.id, opts.name, opts.email, opts.passwordHash, opts.role, opts.room, new Date().toISOString());
+}

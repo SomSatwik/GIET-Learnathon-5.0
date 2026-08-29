@@ -31,6 +31,21 @@ export async function signIn(email: string, password: string): Promise<{ ok: boo
 	return { ok: false, error: result.error };
 }
 
+export async function signUp(
+	name: string,
+	email: string,
+	password: string,
+	confirmPassword: string,
+	room: string
+): Promise<{ ok: boolean; error?: string }> {
+	const result = await authService.signUp(name, email, password, confirmPassword, room);
+	if (result.ok) {
+		current = result.user;
+		return { ok: true };
+	}
+	return { ok: false, error: result.error };
+}
+
 export async function signOut(): Promise<void> {
 	await authService.signOut();
 	current = null;

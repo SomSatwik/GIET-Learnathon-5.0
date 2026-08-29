@@ -30,14 +30,14 @@ export interface CreateGrievanceInput {
 }
 
 export interface AuthService {
-	/** Validate credentials and return the session user (mock-only). */
+	/** Validate credentials and return the session user. */
 	signIn(email: string, password: string): Promise<AuthResult>;
+	/** Register a new student account. */
+	signUp(name: string, email: string, password: string, confirmPassword: string, room: string): Promise<AuthResult>;
 	/** End the session. */
 	signOut(): Promise<void>;
 	/**
 	 * Restore a persisted session synchronously (mock: localStorage).
-	 * A real cookie-session API can expose an async hydration path instead;
-	 * the UI layer does not depend on how this is implemented.
 	 */
 	restore(): User | null;
 }

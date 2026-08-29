@@ -34,3 +34,10 @@ export const LOGIN_MAX_ATTEMPTS = 5;
 
 /** How long (ms) an IP stays locked out after exceeding LOGIN_MAX_ATTEMPTS. */
 export const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+/**
+ * Server-side secret required to create warden accounts via POST /api/register/warden.
+ * Never sent to clients. Undefined in production until the operator sets it.
+ * If not set, warden self-registration is disabled.
+ */
+export const WARDEN_INVITE_CODE: string | undefined = process.env.WARDEN_INVITE_CODE;

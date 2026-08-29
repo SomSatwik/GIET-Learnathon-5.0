@@ -60,6 +60,13 @@ CREATE TABLE IF NOT EXISTS status_changes (
   to_status TEXT NOT NULL,
   changed_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  ip TEXT PRIMARY KEY,
+  fail_count INTEGER NOT NULL DEFAULT 0,
+  locked_until TEXT,
+  last_attempt TEXT NOT NULL
+);
 `;
 
 export function applySchema(db: Database): void {

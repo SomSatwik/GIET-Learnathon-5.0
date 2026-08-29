@@ -28,3 +28,9 @@ export const ALLOWED_ATTACHMENT_TYPES = new Set([
 
 /** Minimum password length enforced at every password-acceptance point. */
 export const MIN_PASSWORD_LENGTH = 8;
+
+/** Number of consecutive failed login attempts before an IP is locked out. */
+export const LOGIN_MAX_ATTEMPTS = 5;
+
+/** How long (ms) an IP stays locked out after exceeding LOGIN_MAX_ATTEMPTS. */
+export const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes

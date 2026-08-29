@@ -29,6 +29,12 @@ Development logins:
 
 Additional students (`priya@example.test`, `rohan@example.test`) also use `student123`.
 
+### User Registration (New Feature)
+
+- **Student Registration (`/register`):** Open self-registration for students. The server unconditionally enforces `role = 'student'` on creation. Accessible via the *"New student? Create an account"* link on `/login`.
+- **Warden Registration (`/register/warden`):** Protected warden onboarding gated by a server-side secret **`WARDEN_INVITE_CODE`** in `.env`. The invitation code is validated with constant-time `timingSafeEqual`. If the environment variable is unset, warden registration is disabled (returns HTTP 403).
+
+
 ## Run
 
 ### Recommended: frontend and API together

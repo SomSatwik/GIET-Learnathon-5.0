@@ -16,10 +16,24 @@ const JPEG = Buffer.from(
 	'base64'
 );
 
+/**
+ * Development-only seed credentials.
+ * Override via environment variables.  In production these env vars should
+ * NOT be set — index.ts skips seeding entirely when NODE_ENV=production.
+ */
+function seedCredential(envVar: string, devDefault: string): string {
+	return process.env[envVar] ?? devDefault;
+}
+
 export async function seedDatabase(db: Database, uploadsDir: string): Promise<void> {
 	ensureUploadsDir(uploadsDir);
-	const studentHash = await hashPassword('student123');
-	const wardenHash = await hashPassword('warden123');
+
+	// Each user gets its own hashPassword() call → distinct Argon2id hash with its own salt,
+	// even if two passwords happen to be the same string.
+	const aaravHash  = await hashPassword(seedCredential('SEED_PASSWORD_AARAV',  'student123'));
+	const priyaHash  = await hashPassword(seedCredential('SEED_PASSWORD_PRIYA',  'student123'));
+	const rohanHash  = await hashPassword(seedCredential('SEED_PASSWORD_ROHAN',  'student123'));
+	const wardenHash = await hashPassword(seedCredential('SEED_PASSWORD_WARDEN', 'warden123'));
 
 	const insertUser = db.prepare(
 		`INSERT INTO users (id, name, email, password_hash, role, room, created_at)
@@ -31,7 +45,7 @@ export async function seedDatabase(db: Database, uploadsDir: string): Promise<vo
 			id: 'stu-1',
 			name: 'Aarav Mehta',
 			email: 'student@example.test',
-			password_hash: studentHash,
+			password_hash: aaravHash,
 			role: 'student',
 			room: 'B-204',
 			created_at: '2026-08-01T08:00:00.000Z'
@@ -40,7 +54,7 @@ export async function seedDatabase(db: Database, uploadsDir: string): Promise<vo
 			id: 'stu-2',
 			name: 'Priya Nair',
 			email: 'priya@example.test',
-			password_hash: studentHash,
+			password_hash: priyaHash,
 			role: 'student',
 			room: 'A-112',
 			created_at: '2026-08-01T08:00:00.000Z'
@@ -49,7 +63,7 @@ export async function seedDatabase(db: Database, uploadsDir: string): Promise<vo
 			id: 'stu-3',
 			name: 'Rohan Das',
 			email: 'rohan@example.test',
-			password_hash: studentHash,
+			password_hash: rohanHash,
 			role: 'student',
 			room: 'C-008',
 			created_at: '2026-08-01T08:00:00.000Z'

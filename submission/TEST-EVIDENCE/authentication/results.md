@@ -57,3 +57,5 @@ Result: PASS
   *Demonstrates university authentication interface with role separation.*
 - **Session Cookie Flags in Browser DevTools:** `../screenshots/02_session_cookie_httponly_samesite.jpg`  
   *Shows `hg_session` cookie in Network response headers with `HttpOnly` flag, `SameSite=Lax`, and active session state.*
+- **Detailed Cookie Inspection & Expiry:** `../screenshots/08_session_cookie_devtools_details.jpg`  
+  *Detailed Network tab breakdown confirming `hg_session` cookie attribute flags (`HttpOnly: true`, `SameSite: Lax`, `Path: /`, and `Expires: 7 days`).*

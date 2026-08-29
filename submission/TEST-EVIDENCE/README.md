@@ -22,6 +22,9 @@ This directory contains evidence for all security claims made in HARDENING.md, S
 | `screenshots/03_grievance_status_rbac_student_view.jpg` | Student view showing RBAC status enforcement ("Only warden can change status") & attachment handling | Authorization & RBAC |
 | `screenshots/04_login_page_credentials.jpg` | Login interface showing university account authentication form | Authentication |
 | `screenshots/05_initial_failed_tests_reproduction.jpg` | Pre-remediation / initial vulnerability reproduction test run (14 failures prior to hardening) | Vulnerability Verification |
+| `screenshots/06_login_page_create_account_link.jpg` | Sign-in page featuring public student self-registration navigation entrypoint | Registration UI |
+| `screenshots/07_idor_blocked_cross_student_grievance.jpg` | IDOR / Object-level authorization in UI: Student accessing another student's grievance receives safe "Grievance not found" screen | IDOR / Object Authorization |
+| `screenshots/08_session_cookie_devtools_details.jpg` | Browser DevTools network inspector showing detailed `hg_session` cookie response headers | Authentication & Cookies |
 
 ## How to Reproduce
 

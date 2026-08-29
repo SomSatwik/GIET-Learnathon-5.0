@@ -1,4 +1,4 @@
-﻿# Registration Test Results
+# Registration Test Results
 Date: 2026-08-29
 
 ## Test REG-01: Student registration — role forced server-side
@@ -59,3 +59,10 @@ Command:
 Expected: 400 (passwords do not match)
 Observed: 400 (verified via npm test)
 Result: PASS
+
+---
+
+## Visual Verification Artifacts
+
+- **Student Self-Registration Entrypoint in UI:** `../screenshots/06_login_page_create_account_link.jpg`  
+  *Demonstrates the "New student? Create an account" link on the login page directing to the dedicated registration flow.*

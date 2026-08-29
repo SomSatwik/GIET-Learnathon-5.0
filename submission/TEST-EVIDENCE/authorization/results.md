@@ -65,3 +65,5 @@ Result: PASS
 
 - **Student Grievance View & Status RBAC UI Guard:** `../screenshots/03_grievance_status_rbac_student_view.jpg`  
   *Demonstrates student inspecting grievance `GRV-0002` ("Corridor tube lights not working") where status is displayed as "In Progress" with the server-enforced RBAC restriction: "Only the warden can change the status of a grievance. You will see updates here." Also verifies attachment display (`corridor-light-off.png`).*
+- **Cross-Student IDOR Attempt Blocked (UI):** `../screenshots/07_idor_blocked_cross_student_grievance.jpg`  
+  *Demonstrates Student Priya Nair attempting to access Aarav's grievance `GRV-0002` via direct URL `/student/grievances/GRV-0002`. The API rejects the request with HTTP 403, and the frontend safely displays "Grievance not found. This grievance does not exist or may have been removed." without leaking any grievance metadata or server internals.*

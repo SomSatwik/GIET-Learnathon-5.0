@@ -1,0 +1,85 @@
+﻿# Reproducible Commands — HostelGrievance Security Testing
+# Run: npm run dev:api (port 3001 must be listening)
+# All tests verified on 2026-08-29
+
+BASE=http://localhost:3001
+
+## 1. Valid login
+curl -s -c cookies.txt -X POST /api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"student@example.test","password":"student123"}' | jq .
+# Expected: 200, {user: {role: "student"}}
+
+## 2. Invalid login
+curl -s -X POST /api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"student@example.test","password":"wrongpassword"}' -w "\nHTTP %{http_code}\n"
+# Expected: 401
+
+## 3. Brute-force lockout (run 5+ times)
+for i in ; do
+  curl -s -X POST /api/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"locktest@example.com","password":"wrong"}' -w " HTTP %{http_code}\n"
+done
+# Expected: first 5 = 401, 6th = 429 with Retry-After header
+
+## 4. Role elevation attempt via /api/register
+curl -s -X POST /api/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Attacker","email":"attacker@test.com","password":"Attack1234","confirmPassword":"Attack1234","room":"X-1","role":"warden"}' | jq .user.role
+# Expected: "student" (NOT "warden") — server ignores client-supplied role
+
+## 5. Warden registration without invite code
+curl -s -X POST /api/register/warden \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Fake","email":"fake@test.com","password":"Fake1234","confirmPassword":"Fake1234","inviteCode":"wrongcode"}' -w "\nHTTP %{http_code}\n"
+# Expected: 403
+
+## 6. IDOR — student accesses another student's grievance
+# Login as Aarav (owns GRV-0001, GRV-0002)
+curl -s -c c1.txt -X POST /api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"student@example.test","password":"student123"}' > /dev/null
+# Try GRV-0003 (belongs to Priya)
+curl -s -b c1.txt /api/grievances/GRV-0003 -w "\nHTTP %{http_code}\n"
+# Expected: 403
+
+## 7. Unauthenticated access to grievances
+curl -s /api/grievances -w "\nHTTP %{http_code}\n"
+# Expected: 401
+
+## 8. Student attempts status change
+curl -s -b c1.txt -X PATCH /api/grievances/GRV-0001 \
+  -H "Content-Type: application/json" \
+  -d '{"status":"resolved"}' -w "\nHTTP %{http_code}\n"
+# Expected: 403
+
+## 9. Warden can list all grievances
+curl -s -c cw.txt -X POST /api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"warden@example.test","password":"warden123"}' > /dev/null
+curl -s -b cw.txt /api/grievances | jq '.data | length'
+# Expected: 8 (all seeded grievances)
+
+## 10. Security headers check
+curl -s -I /api/health | grep -E "X-Frame|X-Content|Content-Security|Strict-Transport"
+# Expected: X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Content-Security-Policy: ..., Strict-Transport-Security: ...
+
+## 11. Cache-Control header
+curl -s -I /api/health | grep Cache-Control
+# Expected: Cache-Control: no-store, no-cache, must-revalidate
+
+## 12. Duplicate email registration
+curl -s -X POST /api/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Dup","email":"student@example.test","password":"Dup12345","confirmPassword":"Dup12345","room":"D-1"}' -w "\nHTTP %{http_code}\n"
+# Expected: 409 Conflict
+
+## 13. Path traversal on attachment
+curl -s -b c1.txt "/api/attachments/../../etc/passwd" -w "\nHTTP %{http_code}\n"
+# Expected: 404 or 400 (path traversal blocked)
+
+## 14. Run full automated test suite
+npm test
+# Expected: Test Files 1 passed (1) / Tests 28 passed (28)

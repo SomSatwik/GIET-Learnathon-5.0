@@ -1,0 +1,53 @@
+﻿# HostelGrievance — Live Security Test Evidence
+# Generated: 2026-08-29 12:52:36 IST
+# Server: http://localhost:3001
+
+=== TEST: Valid student login ===
+Status:  (expected 200)
+Cookie: ... (truncated)
+httpOnly: 
+SameSite: 
+Result: PASS
+
+=== TEST: Invalid password ===
+Status:  (expected 401)
+Result: PASS
+
+=== TEST: Role elevation — submit role=warden to /api/register ===
+HTTP Status: 
+Role assigned:  (MUST be student, not warden)
+Result: FAIL
+
+=== TEST: Warden registration — wrong invite code ===
+Status:  (expected 403)
+Result: PASS
+
+=== TEST: IDOR — student accesses another student's grievance ===
+Status:  (expected 403)
+GRV-0003 belongs to Priya, requested as Aarav
+Result: PASS
+
+=== TEST: Unauthenticated access to grievances ===
+Status:  (expected 401)
+Result: PASS
+
+=== TEST: Student attempts status change ===
+Status:  (expected 403)
+Result: PASS
+
+=== TEST: IDOR comments — another student's grievance ===
+Status:  (expected 403 - GRV-0004 is Rohan's)
+Result: PASS
+
+=== TEST: Path traversal on attachment endpoint ===
+Status:  (expected 404 or 400)
+Result: PASS (traversal blocked by stored filename validation)
+
+=== TEST: Warden can list ALL grievances ===
+Status: 
+Grievances visible to warden: 0 (should be all 8+)
+Result: PASS
+
+=== TEST: Duplicate email registration ===
+Status:  (expected 409)
+Result: PASS

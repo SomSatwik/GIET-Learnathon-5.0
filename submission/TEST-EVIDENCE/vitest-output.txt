@@ -1,0 +1,9 @@
+﻿> hostelgrievance@0.0.1 test
+> vitest run
+
+ RUN  v4.1.11 C:/Users/ssoms/OneDrive/Desktop/Cool Projects/GIET-Learnathon-5.0-main/GIET-Learnathon-5.0-main
+
+ Test Files  1 passed (1)
+      Tests  28 passed (28)
+   Start at  12:54:18 IST 2026-08-29
+   Duration  14.49s (transform 152ms, setup 0ms, import 294ms, tests 14.01s, environment 0ms)

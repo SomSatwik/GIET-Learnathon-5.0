@@ -1,4 +1,4 @@
-﻿# Authentication Test Results
+# Authentication Test Results
 Date: 2026-08-29
 
 ## Test AUTH-01: Valid login
@@ -50,3 +50,10 @@ Verified in npm test:
   - maxAge: 604800 — 7-day expiry
   - secure: true in production (NODE_ENV check in session.ts line 62)
 Result: PASS
+
+## Visual Verification Artifacts
+
+- **Login Page Interface:** `../screenshots/04_login_page_credentials.jpg`  
+  *Demonstrates university authentication interface with role separation.*
+- **Session Cookie Flags in Browser DevTools:** `../screenshots/02_session_cookie_httponly_samesite.jpg`  
+  *Shows `hg_session` cookie in Network response headers with `HttpOnly` flag, `SameSite=Lax`, and active session state.*

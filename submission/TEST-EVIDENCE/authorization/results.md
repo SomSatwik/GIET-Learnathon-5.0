@@ -1,4 +1,4 @@
-﻿# Authorization Test Results
+# Authorization Test Results
 Date: 2026-08-29
 
 ## Test A-01: IDOR — Student accesses another student's grievance
@@ -60,3 +60,8 @@ Command:
 Expected: 403 Forbidden
 Observed: 403 Forbidden (verified via npm test — added test "student cannot comment on another's grievance")
 Result: PASS
+
+## Visual Verification Artifacts
+
+- **Student Grievance View & Status RBAC UI Guard:** `../screenshots/03_grievance_status_rbac_student_view.jpg`  
+  *Demonstrates student inspecting grievance `GRV-0002` ("Corridor tube lights not working") where status is displayed as "In Progress" with the server-enforced RBAC restriction: "Only the warden can change the status of a grievance. You will see updates here." Also verifies attachment display (`corridor-light-off.png`).*

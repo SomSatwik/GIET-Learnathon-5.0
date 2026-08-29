@@ -1,11 +1,4 @@
 ﻿<script lang="ts">
-	/**
-	 * Layout guard for all /warden/* routes.
-	 * Redirects unauthenticated visitors to /login.
-	 * Redirects students to their own dashboard.
-	 * NOTE: this is a UX-level redirect only.
-	 * Server-side authorization is enforced by the Hono API independently.
-	 */
 	import { goto } from '$app/navigation';
 	import { getSession } from '$lib/stores/auth.svelte';
 
@@ -21,6 +14,4 @@
 	});
 </script>
 
-{#if user?.role === 'warden'}
-	{@render children()}
-{/if}
+{@render children()}

@@ -85,6 +85,17 @@ class MockAuthService implements AuthService {
 		return delay({ ok: true as const, user });
 	}
 
+	async signUp(
+		_name: string,
+		_email: string,
+		_password: string,
+		_confirmPassword: string,
+		_room: string
+	): Promise<AuthResult> {
+		// Mock registration is not supported — the real API handles this.
+		return delay({ ok: false as const, error: 'Registration requires the live API server.' });
+	}
+
 	async signOut(): Promise<void> {
 		this.currentUser = null;
 		try {

@@ -12,13 +12,21 @@ export const ssr = false;
 export const load: LayoutLoad = ({ url }) => {
 	const user = getSession();
 
-	if (url.pathname === '/login') {
+	// Public routes — accessible without a session
+	const isPublic =
+		url.pathname === '/login' ||
+		url.pathname === '/register' ||
+		url.pathname.startsWith('/register/');
+
+	if (isPublic) {
+		// If already logged in, redirect away from auth pages to their dashboard
 		if (user) {
 			redirect(307, user.role === 'student' ? '/student' : '/warden');
 		}
 		return {};
 	}
 
+	// All other routes require a session
 	if (!user) {
 		redirect(307, '/login');
 	}

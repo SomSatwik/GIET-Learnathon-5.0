@@ -103,6 +103,15 @@ grievanceRoutes.post('/', async (c) => {
 	if (description.length > 5000) {
 		throw new HttpError(400, 'bad_request', 'Description must be 5000 characters or fewer.');
 	}
+
+	// Per-student grievance creation rate limit (max 10 grievances per 15 minutes) — MED-F
+	const recentCount = db
+		.prepare("SELECT COUNT(*) as count FROM grievances WHERE student_id = ? AND datetime(created_at) > datetime('now', '-15 minutes')")
+		.get(user.id) as { count: number } | undefined;
+	if ((recentCount?.count ?? 0) >= 10) {
+		throw new HttpError(429, 'unauthorized', 'Rate limit exceeded. You can file a maximum of 10 grievances per 15 minutes.');
+	}
+
 	const parsedCategory = parseCategory(category);
 
 	const id = nextGrievanceId(db);
@@ -113,8 +122,8 @@ grievanceRoutes.post('/', async (c) => {
 	).run(id, user.id, title, parsedCategory, description, ts, ts);
 
 	if (upload) {
-		const bytes = await bufferFromUpload(upload);
-		const stored = newStoredName(upload.type);
+		const { bytes, detectedMime } = await bufferFromUpload(upload);
+		const stored = newStoredName(detectedMime);
 		writeStoredFile(uploadsDir, stored, bytes);
 		db.prepare(
 			`INSERT INTO attachments (id, grievance_id, original_filename, stored_filename, mime_type, size_bytes, created_at)
@@ -124,7 +133,7 @@ grievanceRoutes.post('/', async (c) => {
 			id,
 			originalBasename(upload.name),
 			stored,
-			upload.type,
+			detectedMime,
 			bytes.byteLength,
 			ts
 		);
@@ -132,6 +141,15 @@ grievanceRoutes.post('/', async (c) => {
 
 	return c.json({ data: assembleGrievance(db, requireGrievance(db, id)) }, 201);
 });
+
+function sanitizeCommentText(str: string): string {
+	return str
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#x27;');
+}
 
 grievanceRoutes.get('/:id/comments', (c) => {
 	const db = c.get('db');
@@ -160,17 +178,18 @@ grievanceRoutes.post('/:id/comments', async (c) => {
 	} catch {
 		throw new HttpError(400, 'bad_request', 'JSON body is required.');
 	}
-	const text =
+	const rawText =
 		body && typeof body === 'object' && 'body' in body && typeof body.body === 'string'
 			? body.body.trim()
 			: '';
-	if (!text) {
+	if (!rawText) {
 		throw new HttpError(400, 'bad_request', 'Comment cannot be empty.');
 	}
-	if (text.length > 2000) {
+	if (rawText.length > 2000) {
 		throw new HttpError(400, 'bad_request', 'Comment must be 2000 characters or fewer.');
 	}
 
+	const text = sanitizeCommentText(rawText);
 	const id = nextCommentId(db);
 	const ts = nowIso();
 	db.prepare(
@@ -203,15 +222,15 @@ grievanceRoutes.post('/:id/attachments', async (c) => {
 		throw new HttpError(400, 'bad_request', 'A file field named file is required.');
 	}
 
-	const bytes = await bufferFromUpload(upload);
-	const stored = newStoredName(upload.type);
+	const { bytes, detectedMime } = await bufferFromUpload(upload);
+	const stored = newStoredName(detectedMime);
 	const ts = nowIso();
 	writeStoredFile(c.get('uploadsDir'), stored, bytes);
 	const id = nextAttachmentId(db);
 	db.prepare(
 		`INSERT INTO attachments (id, grievance_id, original_filename, stored_filename, mime_type, size_bytes, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
-	).run(id, row.id, originalBasename(upload.name), stored, upload.type, bytes.byteLength, ts);
+	).run(id, row.id, originalBasename(upload.name), stored, detectedMime, bytes.byteLength, ts);
 	touchGrievance(db, row.id, ts);
 	const saved = db.prepare('SELECT * FROM attachments WHERE id = ?').get(id) as AttachmentRow;
 	return c.json({ data: toPublicAttachment(saved) }, 201);

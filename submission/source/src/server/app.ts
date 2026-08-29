@@ -70,10 +70,17 @@ export function createApp(options: CreateAppOptions) {
 		windowMs: 60 * 1000,
 		limit: 200,
 		standardHeaders: 'draft-6',
-		keyGenerator: (c) =>
-			c.req.header('x-forwarded-for')?.split(',')[0].trim() ??
-			c.req.header('x-real-ip') ??
-			'unknown'
+		keyGenerator: (c) => {
+			const trustProxy = process.env.TRUST_PROXY === 'true';
+			if (trustProxy) {
+				return (
+					c.req.header('x-forwarded-for')?.split(',')[0].trim() ??
+					c.req.header('x-real-ip') ??
+					'127.0.0.1'
+				);
+			}
+			return c.req.header('x-real-ip') ?? '127.0.0.1';
+		}
 	});
 	app.use('/api/*', globalApiLimit);
 

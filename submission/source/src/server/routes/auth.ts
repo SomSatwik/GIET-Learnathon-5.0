@@ -18,11 +18,15 @@ function nowIso(): string {
 
 /** Returns the best available client IP from the request. */
 function clientIp(c: { req: { header: (name: string) => string | undefined } }): string {
-	return (
-		c.req.header('x-real-ip') ??
-		c.req.header('x-forwarded-for')?.split(',')[0].trim() ??
-		'unknown'
-	);
+	const trustProxy = process.env.TRUST_PROXY === 'true';
+	if (trustProxy) {
+		return (
+			c.req.header('x-forwarded-for')?.split(',')[0].trim() ??
+			c.req.header('x-real-ip') ??
+			'127.0.0.1'
+		);
+	}
+	return c.req.header('x-real-ip') ?? '127.0.0.1';
 }
 
 /** Returns the ISO lockout-expiry if the IP is currently banned, else null. */

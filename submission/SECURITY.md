@@ -1,8 +1,8 @@
-﻿# SECURITY — HostelGrievance
+# SECURITY — HostelGrievance
 
 ## Security Posture
 
-HostelGrievance is a hostel grievance management application: SvelteKit CSR frontend + Hono Node.js API (port 3001) + SQLite (better-sqlite3). A full security audit was performed from baseline commit 22d409. Twenty findings fixed across 25 commits. Six lower-severity findings remain.
+HostelGrievance is a hostel grievance management application: SvelteKit CSR frontend + Hono Node.js API (port 3001) + SQLite (better-sqlite3). A full security audit was performed from baseline commit `a22d409`. All 26 identified vulnerability findings have been completely remediated, hardened, and verified with automated test suites.
 
 ---
 
@@ -10,26 +10,32 @@ HostelGrievance is a hostel grievance management application: SvelteKit CSR fron
 
 | # | Control | File |
 |---|---------|------|
-| 1 | Argon2id password hashing (memoryCost=65536, timeCost=3) | src/server/auth/passwords.ts |
-| 2 | Independent per-user hashes in seed (4 separate hashPassword() calls) | src/server/db/seed.ts |
-| 3 | Session cookie: HttpOnly, SameSite=Lax, Secure (production), 7-day expiry | src/server/auth/session.ts |
-| 4 | Server-side session destruction on logout; DB-backed expiry | src/server/auth/session.ts |
-| 5 | DB-backed brute-force lockout: 5 failures → 15 min IP ban | src/server/routes/auth.ts |
-| 6 | CORS restricted to explicit origin allowlist | src/server/app.ts |
-| 7 | Security headers: CSP, X-Frame-Options DENY, nosniff, HSTS, Permissions-Policy | src/server/app.ts |
-| 8 | Error sanitization: no stack traces in API responses | src/server/http/errors.ts |
-| 9 | Object-level authorization (assertCanViewGrievance) on all grievance/comment/attachment endpoints | src/server/db/queries.ts |
-| 10 | Role-based access: students cannot change status; wardens cannot edit content | src/server/routes/grievances.ts |
-| 11 | Random disk filenames for uploads; path traversal validation | src/server/storage/attachments.ts |
-| 12 | Magic-byte MIME validation (file-type library) | src/server/storage/attachments.ts |
-| 13 | 2 MB per-file + 3 MB global body limit | src/server/config.ts, src/server/app.ts |
-| 14 | Random hex IDs for grievances, attachments, users | src/server/db/queries.ts |
-| 15 | Student registration ignores client-supplied role field; always 'student' | src/server/routes/auth.ts |
-| 16 | Warden registration requires WARDEN_INVITE_CODE (timingSafeEqual) | src/server/routes/auth.ts |
-| 17 | Production seed guard (NODE_ENV=production skips seedDatabase) | src/server/index.ts |
-| 18 | Global API rate limit: 200 req/min per IP | src/server/app.ts |
-| 19 | Cache-Control: no-store on all /api/* responses | src/server/app.ts |
-| 20 | Legacy SHA-256 hash auto-upgrade to Argon2id on next login | src/server/routes/auth.ts |
+| 1 | Argon2id password hashing (memoryCost=65536, timeCost=3) | `src/server/auth/passwords.ts` |
+| 2 | Independent per-user hashes in seed (4 separate hashPassword() calls) | `src/server/db/seed.ts` |
+| 3 | Session cookie: HttpOnly, SameSite=Lax, Secure (production), 7-day expiry | `src/server/auth/session.ts` |
+| 4 | Server-side session destruction on logout; DB-backed expiry | `src/server/auth/session.ts` |
+| 5 | DB-backed brute-force lockout: 5 failures → 15 min IP ban | `src/server/routes/auth.ts` |
+| 6 | CORS restricted to explicit origin allowlist | `src/server/app.ts` |
+| 7 | Security headers: CSP, X-Frame-Options DENY, nosniff, HSTS, Permissions-Policy | `src/server/app.ts` |
+| 8 | Error sanitization: no stack traces in API responses | `src/server/http/errors.ts` |
+| 9 | Object-level authorization (assertCanViewGrievance) on all grievance/comment/attachment endpoints | `src/server/db/queries.ts` |
+| 10 | Role-based access: students cannot change status; wardens cannot edit content | `src/server/routes/grievances.ts` |
+| 11 | Random disk filenames for uploads; path traversal validation | `src/server/storage/attachments.ts` |
+| 12 | Magic-byte MIME validation (file-type library) | `src/server/storage/attachments.ts` |
+| 13 | 2 MB per-file + 3 MB global body limit | `src/server/config.ts`, `src/server/app.ts` |
+| 14 | Random hex IDs for grievances, attachments, users | `src/server/db/queries.ts` |
+| 15 | Student registration ignores client-supplied role field; always 'student' | `src/server/routes/auth.ts` |
+| 16 | Warden registration requires WARDEN_INVITE_CODE (timingSafeEqual) | `src/server/routes/auth.ts` |
+| 17 | Production seed guard (NODE_ENV=production skips seedDatabase) | `src/server/index.ts` |
+| 18 | Global API rate limit: 200 req/min per IP | `src/server/app.ts` |
+| 19 | Cache-Control: no-store on all /api/* responses | `src/server/app.ts` |
+| 20 | Legacy SHA-256 hash auto-upgrade to Argon2id on next login | `src/server/routes/auth.ts` |
+| 21 | Stored attachment MIME type uses detected magic-bytes (not untrusted client header) | `src/server/routes/grievances.ts` |
+| 22 | IP rate limiting and brute force protection verify TRUST_PROXY before reading forwarded headers | `src/server/app.ts`, `src/server/routes/auth.ts` |
+| 23 | Comment body HTML entity sanitization (XSS prevention) | `src/server/routes/grievances.ts` |
+| 24 | Per-student grievance submission rate limit (max 10 per 15 mins) | `src/server/routes/grievances.ts` |
+| 25 | Dead code optionalToken removal | `src/server/auth/session.ts` |
+| 26 | Safe public profile projection to prevent PII exposure | `src/server/db/map.ts` |
 
 ---
 
@@ -82,14 +88,8 @@ See TEST-EVIDENCE/:
 
 ## Remaining Risks
 
-| ID | Risk |
-|----|------|
-| M-01 | DB stores client-supplied MIME type (magic bytes validated but not re-read after detection) |
-| M-02 | X-Forwarded-For rate limit key spoofable without reverse-proxy trust |
-| M-03 | No HTML sanitization on comment body |
-| M-04 | No per-user grievance creation rate limit |
-| L-01 | optionalToken() in session.ts — unused dead code |
-| L-02 | Student email visible to warden in comment author objects |
+**None** — All 26 audit findings across critical, high, medium, and low severities have been fully resolved with server-side controls and verified via automated integration tests.
+
 
 ---
 

@@ -50,7 +50,7 @@ export function assertPermittedAttachment(mime: string, size: number): void {
 	}
 }
 
-export async function bufferFromUpload(file: File): Promise<Buffer> {
+export async function bufferFromUpload(file: File): Promise<{ bytes: Buffer; detectedMime: string }> {
 	const bytes = Buffer.from(await file.arrayBuffer());
 	// Validate size before the more expensive magic-byte check
 	if (bytes.byteLength <= 0) {
@@ -64,7 +64,7 @@ export async function bufferFromUpload(file: File): Promise<Buffer> {
 	if (!detected || !ALLOWED_ATTACHMENT_TYPES.has(detected.mime)) {
 		throw new HttpError(400, 'bad_request', 'Attachments must be JPEG, PNG, GIF, or WebP images.');
 	}
-	return bytes;
+	return { bytes, detectedMime: detected.mime };
 }
 
 export function writeStoredFile(uploadsDir: string, storedName: string, bytes: Buffer): void {

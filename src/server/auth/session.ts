@@ -80,9 +80,6 @@ export function requireUser(c: Context, db: Database): SessionUser {
 	return user;
 }
 
-export function optionalToken(c: Context): string | undefined {
-	return getCookie(c, SESSION_COOKIE);
-}
 
 /**
  * Centralized role-based authorization guard.
